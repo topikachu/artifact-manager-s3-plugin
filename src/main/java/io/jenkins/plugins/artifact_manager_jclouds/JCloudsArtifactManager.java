@@ -61,6 +61,7 @@ import jenkins.MasterToSlaveFileCallable;
 import jenkins.model.ArtifactManager;
 import jenkins.util.VirtualFile;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.tika.Tika;
 import org.jclouds.blobstore.BlobStore;
 import org.jclouds.blobstore.BlobStoreContext;
 import org.jclouds.blobstore.BlobStores;
@@ -152,13 +153,11 @@ public final class JCloudsArtifactManager extends ArtifactManager implements Sta
         @Override
         public Map<String, String> invoke(File f, VirtualChannel channel) {
             Map<String, String> contentTypes = new HashMap<>();
+            Tika tika = new Tika();
             for (String relPath : relPaths) {
                 File theFile = new File(f, relPath);
                 try {
-                    String contentType = Files.probeContentType(theFile.toPath());
-                    if (contentType == null) {
-                        contentType = URLConnection.guessContentTypeFromName(theFile.getName());
-                    }
+                    String contentType = tika.detect(theFile);
                     contentTypes.put(relPath, contentType);
                 } catch (IOException e) {
                     Functions.printStackTrace(e, listener.error("Unable to determine content type for file: " + theFile));
